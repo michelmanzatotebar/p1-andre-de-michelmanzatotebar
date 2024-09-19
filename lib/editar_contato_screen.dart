@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'contato_model.dart';
 import 'contato_service.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class EditarContatoScreen extends StatefulWidget {
   final Contato contato;
@@ -20,11 +19,6 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
   late TextEditingController _telefoneController;
   late TextEditingController _emailController;
   final ContatoService _contatoService = ContatoService();
-
-  final _telefoneMask = MaskTextInputFormatter(
-    mask: '(##) #####-####',
-    filter: {"#": RegExp(r'[0-9]')},
-  );
 
   @override
   void initState() {
@@ -60,7 +54,6 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
                 controller: _telefoneController,
                 decoration: InputDecoration(labelText: 'Telefone'),
                 keyboardType: TextInputType.phone,
-                inputFormatters: [_telefoneMask],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira um telefone';
@@ -101,22 +94,25 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
       ),
     );
   }
+  String formatarTelefone(String telefone) {
+    if (telefone.length != 11) return telefone;
+    return '(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}';
+  }
 
-  void _salvarContato() async {
+  void _salvarContato() {
     if (_formKey.currentState!.validate()) {
-      Contato contatoAtualizado = Contato(
-        id: widget.contato.id,
+      Contato novoContato = Contato(
         nome: _nomeController.text,
-        telefone: _telefoneController.text,
+        telefone: formatarTelefone(_telefoneController.text),
         email: _emailController.text,
       );
-      await _contatoService.atualizarContato(contatoAtualizado);
+      _contatoService.adicionarContato(novoContato);
       Navigator.pop(context, true);
     }
   }
 
-  void _excluirContato() async {
-    await _contatoService.excluirContato(widget.contato.id);
+  void _excluirContato() {
+    _contatoService.excluirContato(widget.contato.id);
     Navigator.pop(context, true);
   }
 

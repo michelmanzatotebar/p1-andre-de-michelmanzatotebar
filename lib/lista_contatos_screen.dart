@@ -18,30 +18,7 @@ class _ListaContatosScreenState extends State<ListaContatosScreen> {
       appBar: AppBar(
         title: Text('Agenda de Contatos'),
       ),
-      body: FutureBuilder<List<Contato>>(
-        future: _contatoService.getContatos(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erro ao carregar contatos'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Nenhum contato encontrado'));
-          }
-
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              Contato contato = snapshot.data![index];
-              return ListTile(
-                title: Text(contato.nome),
-                subtitle: Text('${contato.telefone}\n${contato.email}'),
-                onTap: () => _editarContato(contato),
-              );
-            },
-          );
-        },
-      ),
+      body: _buildContatosList(),
       floatingActionButton: FloatingActionButton(
         onPressed: _adicionarContato,
         child: Icon(Icons.add),
@@ -49,25 +26,47 @@ class _ListaContatosScreenState extends State<ListaContatosScreen> {
     );
   }
 
-  void _adicionarContato() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => AdicionarContatoScreen()),
-    );
-    if (result != null) {
-      setState(() {});
+  Widget _buildContatosList() {
+    List<Contato> contatos = _contatoService.getContatos();
+
+    if (contatos.isEmpty) {
+      return Center(child: Text('Nenhum contato encontrado'));
     }
+
+    return ListView.builder(
+      itemCount: contatos.length,
+      itemBuilder: (context, index) {
+        Contato contato = contatos[index];
+        return ListTile(
+          title: Text(contato.nome),
+          subtitle: Text('${contato.telefone}\n${contato.email}'),
+          onTap: () => _editarContato(contato),
+        );
+      },
+    );
   }
 
-  void _editarContato(Contato contato) async {
-    final result = await Navigator.push(
+  void _adicionarContato() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AdicionarContatoScreen()),
+    ).then((value) {
+      if (value == true) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _editarContato(Contato contato) {
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditarContatoScreen(contato: contato),
       ),
-    );
-    if (result != null) {
-      setState(() {});
-    }
+    ).then((value) {
+      if (value == true) {
+        setState(() {});
+      }
+    });
   }
 }

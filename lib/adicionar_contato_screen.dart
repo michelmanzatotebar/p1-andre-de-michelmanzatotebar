@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'contato_model.dart';
 import 'contato_service.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class AdicionarContatoScreen extends StatefulWidget {
   @override
@@ -16,11 +15,6 @@ class _AdicionarContatoScreenState extends State<AdicionarContatoScreen> {
   final _telefoneController = TextEditingController();
   final _emailController = TextEditingController();
   final ContatoService _contatoService = ContatoService();
-
-  final _telefoneMask = MaskTextInputFormatter(
-    mask: '(##) #####-####',
-    filter: {"#": RegExp(r'[0-9]')},
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +42,6 @@ class _AdicionarContatoScreenState extends State<AdicionarContatoScreen> {
                 controller: _telefoneController,
                 decoration: InputDecoration(labelText: 'Telefone'),
                 keyboardType: TextInputType.phone,
-                inputFormatters: [_telefoneMask],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira um telefone';
@@ -84,15 +77,19 @@ class _AdicionarContatoScreenState extends State<AdicionarContatoScreen> {
       ),
     );
   }
+  String formatarTelefone(String telefone) {
+    if (telefone.length != 11) return telefone;
+    return '(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}';
+  }
 
-  void _salvarContato() async {
+  void _salvarContato() {
     if (_formKey.currentState!.validate()) {
       Contato novoContato = Contato(
         nome: _nomeController.text,
-        telefone: _telefoneController.text,
+        telefone: formatarTelefone(_telefoneController.text),
         email: _emailController.text,
       );
-      await _contatoService.adicionarContato(novoContato);
+      _contatoService.adicionarContato(novoContato);
       Navigator.pop(context, true);
     }
   }

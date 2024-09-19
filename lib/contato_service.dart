@@ -1,29 +1,27 @@
-import 'dart:async';
 import 'contato_model.dart';
 
-class ContatoService{
+class ContatoService {
   List<Contato> _contatos = [];
   int _nextId = 1;
-  Future<List<Contato>> getContatos() async{
-    await Future.delayed(Duration(milliseconds: 500));
+
+  List<Contato> getContatos() {
     return _contatos;
   }
-  Future<void> adicionarContato(Contato contato) async{
-    await Future.delayed(Duration(milliseconds: 500));
-    contato.id= _nextId.toString();
+
+  void adicionarContato(Contato contato) {
+    contato.id = _nextId.toString();
     _nextId++;
     _contatos.add(contato);
   }
-  Future<void> atualizarContato(Contato contato) async {
-    await Future.delayed(Duration(milliseconds: 500));
+
+  void atualizarContato(Contato contato) {
     int index = _contatos.indexWhere((c) => c.id == contato.id);
     if (index != -1) {
       _contatos[index] = contato;
     }
   }
 
-  Future<void> excluirContato(String? id) async {
-    await Future.delayed(Duration(milliseconds: 500));
+  void excluirContato(String? id) {
     _contatos.removeWhere((contato) => contato.id == id);
   }
 }
