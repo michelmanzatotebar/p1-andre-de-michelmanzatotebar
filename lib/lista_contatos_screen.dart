@@ -11,6 +11,19 @@ class ListaContatosScreen extends StatefulWidget {
 
 class _ListaContatosScreenState extends State<ListaContatosScreen> {
   final ContatoService _contatoService = ContatoService();
+  List<Contato> _contatos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarContatos();
+  }
+
+  void _carregarContatos() {
+    setState(() {
+      _contatos = _contatoService.getContatos();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +31,19 @@ class _ListaContatosScreenState extends State<ListaContatosScreen> {
       appBar: AppBar(
         title: Text('Agenda de Contatos'),
       ),
-      body: _buildContatosList(),
+      body: _contatos.isEmpty
+          ? Center(child: Text('Nenhum contato encontrado'))
+          : ListView.builder(
+        itemCount: _contatos.length,
+        itemBuilder: (context, index) {
+          Contato contato = _contatos[index];
+          return ListTile(
+            title: Text(contato.nome),
+            subtitle: Text('${contato.telefone}\n${contato.email}'),
+            onTap: () => _editarContato(contato),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _adicionarContato,
         child: Icon(Icons.add),
@@ -26,47 +51,25 @@ class _ListaContatosScreenState extends State<ListaContatosScreen> {
     );
   }
 
-  Widget _buildContatosList() {
-    List<Contato> contatos = _contatoService.getContatos();
-
-    if (contatos.isEmpty) {
-      return Center(child: Text('Nenhum contato encontrado'));
-    }
-
-    return ListView.builder(
-      itemCount: contatos.length,
-      itemBuilder: (context, index) {
-        Contato contato = contatos[index];
-        return ListTile(
-          title: Text(contato.nome),
-          subtitle: Text('${contato.telefone}\n${contato.email}'),
-          onTap: () => _editarContato(contato),
-        );
-      },
-    );
-  }
-
-  void _adicionarContato() {
-    Navigator.push(
+  void _adicionarContato() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => AdicionarContatoScreen()),
-    ).then((value) {
-      if (value == true) {
-        setState(() {});
-      }
-    });
+    );
+    if (result == true) {
+      _carregarContatos();
+    }
   }
 
-  void _editarContato(Contato contato) {
-    Navigator.push(
+  void _editarContato(Contato contato) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditarContatoScreen(contato: contato),
       ),
-    ).then((value) {
-      if (value == true) {
-        setState(() {});
-      }
-    });
+    );
+    if (result == true) {
+      _carregarContatos();
+    }
   }
 }

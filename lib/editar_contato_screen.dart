@@ -59,7 +59,7 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
                     return 'Por favor, insira um telefone';
                   }
                   if (value.length < 14) {
-                    return 'Telefone inválido';
+                    return 'Telefone inválido, verifique se colocou () e - no número';
                   }
                   return null;
                 },
@@ -106,10 +106,12 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
         telefone: formatarTelefone(_telefoneController.text),
         email: _emailController.text,
       );
+      _contatoService.excluirContato(widget.contato.id);
       _contatoService.adicionarContato(novoContato);
       Navigator.pop(context, true);
     }
   }
+
 
   void _excluirContato() {
     _contatoService.excluirContato(widget.contato.id);
