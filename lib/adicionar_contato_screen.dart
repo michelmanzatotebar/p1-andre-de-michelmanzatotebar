@@ -47,7 +47,7 @@ class _AdicionarContatoScreenState extends State<AdicionarContatoScreen> {
                     return 'Por favor, insira um telefone';
                   }
                   if (value.length < 14) {
-                    return 'Telefone inválido';
+                    return 'Telefone inválido, verifique se colocou () e - no número';
                   }
                   return null;
                 },
