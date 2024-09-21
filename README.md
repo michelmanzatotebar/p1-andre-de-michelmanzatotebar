@@ -1,6 +1,6 @@
 # trabalhop1andredemichelmanzatotebar
 
-Trablho p1
+Trablho p1, testado pelo emulador EDGE WEB
 
 ## Getting Started
 
