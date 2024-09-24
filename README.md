@@ -1,6 +1,6 @@
 # trabalhop1andredemichelmanzatotebar
 
-Trablho p1, emulador utilizado: EDGE WEB
+Trabalho p1, emulador utilizado: EDGE WEB
 Em dependencias ( pubspec.yaml) verifique se tem 
 dependencies:
   flutter:
