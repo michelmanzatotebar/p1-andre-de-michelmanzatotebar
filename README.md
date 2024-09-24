@@ -8,4 +8,4 @@ dependencies:
   email_validator: ^2.1.17
   mask_text_input_formatter: ^2.4.0
 
-no terminal execute o comando flutter pub get
+Após colocar estes comandos, no terminal execute o comando flutter pub get
