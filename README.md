@@ -1,6 +1,17 @@
 # trabalhop1andredemichelmanzatotebar
 
-Trablho p1, testado pelo emulador EDGE WEB
+Trablho p1, emulador utilizado: EDGE WEB
+Em dependencias ( pubspec.yaml) verifique se tem 
+dependencies:
+  flutter:
+    sdk: flutter
+  email_validator: ^2.1.17
+  mask_text_input_formatter: ^2.4.0
+
+no terminal execute o comando flutter pub get
+
+
+em seguida dê 
 
 ## Getting Started
 
