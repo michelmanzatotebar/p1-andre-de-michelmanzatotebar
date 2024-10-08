@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'contato_model.dart';
 import 'contato_service.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class EditarContatoScreen extends StatefulWidget {
+  final Future<Database> database;
   final Contato contato;
 
-  EditarContatoScreen({required this.contato});
+  const EditarContatoScreen({Key? key, required this.database, required this.contato}) : super(key: key);
 
   @override
   _EditarContatoScreenState createState() => _EditarContatoScreenState();
@@ -18,11 +19,18 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
   late TextEditingController _nomeController;
   late TextEditingController _telefoneController;
   late TextEditingController _emailController;
-  final ContatoService _contatoService = ContatoService();
+
+  late ContatoService _contatoService;
+
+  final _telefoneMask = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void initState() {
     super.initState();
+    _contatoService = ContatoService(widget.database);
     _nomeController = TextEditingController(text: widget.contato.nome);
     _telefoneController = TextEditingController(text: widget.contato.telefone);
     _emailController = TextEditingController(text: widget.contato.email);
@@ -32,97 +40,85 @@ class _EditarContatoScreenState extends State<EditarContatoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editar Contato'),
+        title: const Text('Editar Contato'),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
           child: Column(
             children: [
               TextFormField(
                 controller: _nomeController,
-                decoration: InputDecoration(labelText: 'Nome'),
+                decoration: const InputDecoration(labelText: 'Nome'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um nome';
+                    return 'Por favor, insira o nome';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: _telefoneController,
-                decoration: InputDecoration(labelText: 'Telefone'),
+                decoration: const InputDecoration(labelText: 'Telefone'),
                 keyboardType: TextInputType.phone,
+                inputFormatters: [_telefoneMask],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um telefone';
+                    return 'Por favor, insira o telefone';
                   }
                   if (value.length < 14) {
-                    return 'Telefone inválido, verifique se colocou () e - no número';
+                    return 'Telefone inválido';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'E-mail'),
+                decoration: const InputDecoration(labelText: 'E-mail'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um e-mail';
+                    return 'Por favor, insira o e-mail';
                   }
-                  if (!EmailValidator.validate(value)) {
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                     return 'E-mail inválido';
                   }
                   return null;
                 },
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _salvarContato,
-                child: Text('Salvar'),
-              ),
-              ElevatedButton(
-                onPressed: _excluirContato,
-                child: Text('Excluir'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        final contatoAtualizado = Contato(
+                          id: widget.contato.id,
+                          nome: _nomeController.text,
+                          telefone: _telefoneController.text,
+                          email: _emailController.text,
+                        );
+                        await _contatoService.atualizarContato(contatoAtualizado);
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text('Salvar'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _contatoService.deletarContato(widget.contato.id!);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    child: const Text('Excluir'),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
     );
-  }
-  String formatarTelefone(String telefone) {
-    if (telefone.length != 11) return telefone;
-    return '(${telefone.substring(0, 2)}) ${telefone.substring(2, 7)}-${telefone.substring(7)}';
-  }
-
-  void _salvarContato() {
-    if (_formKey.currentState!.validate()) {
-      Contato novoContato = Contato(
-        nome: _nomeController.text,
-        telefone: formatarTelefone(_telefoneController.text),
-        email: _emailController.text,
-      );
-      _contatoService.excluirContato(widget.contato.id);
-      _contatoService.adicionarContato(novoContato);
-      Navigator.pop(context, true);
-    }
-  }
-
-
-  void _excluirContato() {
-    _contatoService.excluirContato(widget.contato.id);
-    Navigator.pop(context, true);
-  }
-
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _telefoneController.dispose();
-    _emailController.dispose();
-    super.dispose();
   }
 }

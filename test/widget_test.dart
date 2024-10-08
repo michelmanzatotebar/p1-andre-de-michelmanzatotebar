@@ -1,30 +1,25 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:trabalhop1andredemichelmanzatotebar/main.dart';
+import 'package:agenda_contatos/main.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget( AgendaApp());
+  testWidgets('App pode ser construído', (WidgetTester tester) async {
+    // Inicializa o sqflite para testes
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Cria um banco de dados em memória para testes
+    final database = await openDatabase(inMemoryDatabasePath, version: 1,
+        onCreate: (db, version) async {
+          await db.execute(
+              'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)');
+        });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Constrói nosso app e dispara um frame.
+    await tester.pumpWidget(AgendaApp(database: Future.value(database)));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Se chegamos até aqui sem erros, o teste passa.
+    expect(true, isTrue);
   });
 }
