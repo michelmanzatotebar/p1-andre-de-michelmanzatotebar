@@ -5,7 +5,7 @@ import 'lista_contatos_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final database = openDatabase(
+  final database = await openDatabase(
     join(await getDatabasesPath(), 'agenda_database.db'),
     onCreate: (db, version) {
       return db.execute(
@@ -14,7 +14,7 @@ void main() async {
     },
     version: 1,
   );
-  runApp(AgendaApp(database: database));
+  runApp(AgendaApp(database: Future.value(database)));
 }
 
 class AgendaApp extends StatelessWidget {
