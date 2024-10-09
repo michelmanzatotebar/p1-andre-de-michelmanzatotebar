@@ -1,25 +1,40 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:agenda_contatos/main.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  testWidgets('App pode ser construído', (WidgetTester tester) async {
-    // Inicializa o sqflite para testes
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
 
-    // Cria um banco de dados em memória para testes
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
+  testWidgets('Verifica se o título da AppBar está correto', (WidgetTester tester) async {
+
     final database = await openDatabase(inMemoryDatabasePath, version: 1,
         onCreate: (db, version) async {
           await db.execute(
               'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)');
         });
 
-    // Constrói nosso app e dispara um frame.
+
     await tester.pumpWidget(AgendaApp(database: Future.value(database)));
 
-    // Se chegamos até aqui sem erros, o teste passa.
-    expect(true, isTrue);
+
+    expect(find.text('Agenda de Contatos'), findsOneWidget);
+  });
+
+  testWidgets('Verifica se o botão de adicionar contato está presente', (WidgetTester tester) async {
+
+    final database = await openDatabase(inMemoryDatabasePath, version: 1,
+        onCreate: (db, version) async {
+          await db.execute(
+              'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)');
+        });
+
+
+    await tester.pumpWidget(AgendaApp(database: Future.value(database)));
+
+    expect(find.byType(FloatingActionButton), findsOneWidget);
   });
 }
