@@ -1,3 +1,4 @@
+import 'package:agenda_contatos/main.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'contato_model.dart';
@@ -6,62 +7,73 @@ import 'adicionar_contato_screen.dart';
 import 'editar_contato_screen.dart';
 
 class ListaContatosScreen extends StatefulWidget {
-  final Future<Database> database;
-
-  const ListaContatosScreen({Key? key, required this.database}) : super(key: key);
-
   @override
   _ListaContatosScreenState createState() => _ListaContatosScreenState();
 }
 
 class _ListaContatosScreenState extends State<ListaContatosScreen> {
-  late ContatoService _contatoService;
+  Future<List<Map<String, dynamic>>> _getContatos() async {
+    try {
+      return await globalDb.query('contatos');
+    } catch (e) {
+      print('Erro ao buscar contatos: $e');
+      return [];
+    }
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    _contatoService = ContatoService(widget.database);
+  void _atualizarLista() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agenda de Contatos'),
+        title: Text('Agenda de Contatos'),
       ),
-      body: FutureBuilder<List<Contato>>(
-        future: _contatoService.listarContatos(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _getContatos(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          if (snapshot.hasError) {
             return Center(child: Text('Erro: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Nenhum contato encontrado'));
-          } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final contato = snapshot.data![index];
-                return ListTile(
-                  title: Text(contato.nome),
-                  subtitle: Text('${contato.telefone}\n${contato.email}'),
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditarContatoScreen(
-                          database: widget.database,
-                          contato: contato,
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final contatos = snapshot.data ?? [];
+
+          if (contatos.isEmpty) {
+            return Center(child: Text('Nenhum contato cadastrado'));
+          }
+
+          return ListView.builder(
+            itemCount: contatos.length,
+            itemBuilder: (context, index) {
+              final contato = contatos[index];
+              return ListTile(
+                title: Text(contato['nome'] ?? ''),
+                subtitle: Text('${contato['telefone']}\n${contato['email']}'),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditarContatoScreen(
+                        contato: Contato(
+                          id: contato['id'],
+                          nome: contato['nome'],
+                          telefone: contato['telefone'],
+                          email: contato['email'],
                         ),
                       ),
-                    );
-                    setState(() {});
-                  },
-                );
-              },
-            );
-          }
+                    ),
+                  );
+                  _atualizarLista();
+                },
+              );
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -69,12 +81,12 @@ class _ListaContatosScreenState extends State<ListaContatosScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AdicionarContatoScreen(database: widget.database),
+              builder: (context) => AdicionarContatoScreen(),
             ),
           );
-          setState(() {});
+          _atualizarLista();
         },
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
   }

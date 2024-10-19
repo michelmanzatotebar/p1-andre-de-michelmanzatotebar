@@ -1,26 +1,43 @@
+import 'package:agenda_contatos/lista_contatos_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'lista_contatos_screen.dart';
+
+late Database globalDb;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final database = await openDatabase(
-    join(await getDatabasesPath(), 'agenda_database.db'),
-    onCreate: (db, version) {
-      return db.execute(
-        'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)',
-      );
-    },
-    version: 1,
-  );
-  runApp(AgendaApp(database: Future.value(database)));
+
+  try {
+    globalDb = await openDatabase(
+      join(await getDatabasesPath(), 'agenda_database.db'),
+      onCreate: (db, version) async {
+        await db.execute(
+          'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)',
+        );
+      },
+      onOpen: (db) async {
+        // Verifica se a tabela existe
+        var tables = await db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='contatos'");
+        if (tables.isEmpty) {
+          await db.execute(
+            'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)',
+          );
+        }
+      },
+      version: 1,
+    );
+
+    runApp(AgendaApp());
+  } catch (e) {
+    print('Erro na inicialização do banco: $e');
+  }
 }
 
 class AgendaApp extends StatelessWidget {
-  final Future<Database> database;
-
-  const AgendaApp({Key? key, required this.database}) : super(key: key);
+  const AgendaApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +46,7 @@ class AgendaApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ListaContatosScreen(database: database),
+      home: ListaContatosScreen(),
     );
   }
 }
