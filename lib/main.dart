@@ -1,5 +1,7 @@
+import 'package:agenda_contatos/autenticacao_service.dart';
+import 'package:agenda_contatos/database_helper.dart';
 import 'package:agenda_contatos/lista_contatos_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:agenda_contatos/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -16,37 +18,17 @@ void main() async {
         await db.execute(
           'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)',
         );
-      },
-      onOpen: (db) async {
-        // Verifica se a tabela existe
-        var tables = await db.rawQuery(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='contatos'");
-        if (tables.isEmpty) {
-          await db.execute(
-            'CREATE TABLE contatos(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, telefone TEXT, email TEXT)',
-          );
-        }
+        await DatabaseHelper.createLoginTable(db);
       },
       version: 1,
     );
 
-    runApp(AgendaApp());
+    final hasToken = await AuthService.verificarToken();
+
+    runApp(MaterialApp(
+      home: hasToken ? ListaContatosScreen() : LoginScreen(),
+    ));
   } catch (e) {
     print('Erro na inicialização do banco: $e');
-  }
-}
-
-class AgendaApp extends StatelessWidget {
-  const AgendaApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Agenda de Contatos',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: ListaContatosScreen(),
-    );
   }
 }

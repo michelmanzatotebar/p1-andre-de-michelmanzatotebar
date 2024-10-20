@@ -23,7 +23,6 @@ void main() {
         );
       },
     );
-    await tester.pumpWidget(const AgendaApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Agenda de Contatos'), findsOneWidget);
